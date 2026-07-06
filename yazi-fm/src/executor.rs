@@ -111,6 +111,7 @@ impl<'a> Executor<'a> {
 		on!(yank);
 		on!(unyank);
 		on!(paste);
+		on!(paste_resolved);
 		on!(link);
 		on!(hardlink);
 		on!(remove);

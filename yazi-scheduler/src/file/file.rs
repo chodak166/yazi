@@ -27,7 +27,15 @@ impl File {
 	pub(crate) async fn copy(&self, mut task: FileInCopy) -> Result<(), FileOutCopy> {
 		let id = task.id;
 
-		if !task.force {
+		if task.replace {
+			let cha = task.init().await?;
+			if cha.is_dir() {
+				ok_or_not_found!(task, provider::remove_dir_all(&task.to).await);
+			} else {
+				ok_or_not_found!(task, provider::remove_file(&task.to).await);
+			}
+			task.force = true;
+		} else if !task.force {
 			task.to = unique_file(mem::take(&mut task.to), task.init().await?.is_dir())
 				.await
 				.context("Cannot determine unique destination name")?;
@@ -92,7 +100,15 @@ impl File {
 	pub(crate) async fn cut(&self, mut task: FileInCut) -> Result<(), FileOutCut> {
 		let id = task.id;
 
-		if !task.force {
+		if task.replace {
+			let cha = task.init().await?;
+			if cha.is_dir() {
+				ok_or_not_found!(task, provider::remove_dir_all(&task.to).await);
+			} else {
+				ok_or_not_found!(task, provider::remove_file(&task.to).await);
+			}
+			task.force = true;
+		} else if !task.force {
 			task.to = unique_file(mem::take(&mut task.to), task.init().await?.is_dir())
 				.await
 				.context("Cannot determine unique destination name")?;

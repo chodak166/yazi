@@ -132,13 +132,14 @@ impl FileIn {
 // --- Copy
 #[derive(Clone, Debug)]
 pub(crate) struct FileInCopy {
-	pub(crate) id:     Id,
-	pub(crate) from:   UrlBuf,
-	pub(crate) to:     UrlBuf,
-	pub(crate) force:  bool,
-	pub(crate) cha:    Option<Cha>,
-	pub(crate) follow: bool,
-	pub(crate) retry:  u8,
+	pub(crate) id:      Id,
+	pub(crate) from:    UrlBuf,
+	pub(crate) to:      UrlBuf,
+	pub(crate) force:   bool,
+	pub(crate) replace: bool,
+	pub(crate) cha:     Option<Cha>,
+	pub(crate) follow:  bool,
+	pub(crate) retry:   u8,
 }
 
 impl TaskIn for FileInCopy {
@@ -174,14 +175,15 @@ impl FileInCopy {
 // --- Cut
 #[derive(Clone, Debug)]
 pub struct FileInCut {
-	pub(crate) id:     Id,
-	pub(crate) from:   UrlBuf,
-	pub(crate) to:     UrlBuf,
-	pub(crate) force:  bool,
-	pub(crate) cha:    Option<Cha>,
-	pub(crate) follow: bool,
-	pub(crate) retry:  u8,
-	pub(crate) drop:   Option<mpsc::Sender<()>>,
+	pub(crate) id:      Id,
+	pub(crate) from:    UrlBuf,
+	pub(crate) to:      UrlBuf,
+	pub(crate) force:   bool,
+	pub(crate) replace: bool,
+	pub(crate) cha:     Option<Cha>,
+	pub(crate) follow:  bool,
+	pub(crate) retry:   u8,
+	pub(crate) drop:    Option<mpsc::Sender<()>>,
 }
 
 impl TaskIn for FileInCut {
@@ -211,10 +213,16 @@ impl FileInCut {
 			from,
 			to,
 			force,
+			replace: false,
 			cha: None,
 			retry: 0,
 			drop: None,
 		}
+	}
+
+	pub fn with_replace(mut self, replace: bool) -> Self {
+		self.replace = replace;
+		self
 	}
 
 	pub(super) fn into_link(mut self) -> FileInLink {

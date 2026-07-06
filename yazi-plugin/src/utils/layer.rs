@@ -3,10 +3,10 @@ use std::{str::FromStr, time::Duration};
 use mlua::{ExternalError, ExternalResult, Function, IntoLuaMulti, Lua, Table, Value};
 use tokio_stream::wrappers::UnboundedReceiverStream;
 use yazi_binding::{elements::{Line, Text}, runtime};
-use yazi_config::{Platform, keymap::{Chord, ChordArc, Key}, popup::ConfirmCfg};
+use yazi_config::{Platform, YAZI, keymap::{Chord, ChordArc, Key}, popup::ConfirmCfg};
 use yazi_core::notify::MessageOpt;
 use yazi_macro::relay;
-use yazi_proxy::{ConfirmProxy, InputProxy, NotifyProxy, WhichProxy};
+use yazi_proxy::{ConfirmProxy, InputProxy, NotifyProxy, PickProxy, WhichProxy};
 use yazi_shared::{Debounce, Layer};
 use yazi_widgets::input::{InputOpt, InputStream};
 
@@ -85,6 +85,23 @@ impl Utils {
 			});
 
 			Ok(result.await)
+		})
+	}
+
+	pub(super) fn pick(lua: &Lua) -> mlua::Result<Function> {
+		lua.create_async_function(|lua, t: Table| async move {
+			if runtime!(lua)?.blocking {
+				return Err("Cannot call `ya.pick()` while main thread is blocked".into_lua_err());
+			}
+
+			let title: String = t.raw_get("title").unwrap_or_default();
+			let items: Vec<String> = t
+				.raw_get::<Table>("items")?
+				.sequence_values::<String>()
+				.collect::<mlua::Result<_>>()?;
+
+			let result = PickProxy::show(YAZI.pick.open(items).with_title(title)).await;
+			Ok(result)
 		})
 	}
 

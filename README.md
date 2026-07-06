@@ -1,3 +1,82 @@
+## About this fork
+
+This is a fork of [yazi](https://github.com/sxyazi/yazi) that extends the plugin
+API and file-operation scheduler so that **Lua plugins can intercept, inspect,
+and resolve paste operations on a per-item basis**. The upstream `paste` command
+operates on the entire yanked set as a batch and silently appends `_1`, `_2`
+suffixes to conflicting names. This fork adds the building blocks plugins need
+to make per-item decisions — prompting the user, renaming on the fly, or
+replacing/merging selectively — before any file is written.
+
+### Changes
+
+**1. Expose the pick dialog to Lua — `ya.pick()`**
+
+The pick dialog already existed internally for yazi's own commands but was not
+reachable from plugin code. A new `ya.pick({ title = …, items = { … } })`
+binding (`yazi-plugin/src/utils/layer.rs`, `utils.rs`) lets any Lua plugin
+present an interactive choice list and receive the user's selection
+asynchronously. A companion `PickCfg::with_title()` builder
+(`yazi-config/src/popup/options.rs`) allows the caller to override the dialog
+title.
+
+**2. Expose yanked URLs to Lua — `cx.yanked:urls()`**
+
+The `Yanked` user-data now exposes a `:urls()` method
+(`yazi-actor/src/lives/yanked.rs`) so plugins can read the full list of yanked
+or cut paths and inspect them before deciding what to do.
+
+**3. Per-item paste infrastructure — `paste_resolved` actor + parser**
+
+A new `paste_resolved` command (`yazi-parser/src/mgr/paste_resolved.rs`,
+`yazi-actor/src/mgr/paste_resolved.rs`) accepts a list of `{ from, to,
+overwrite, replace }` items and dispatches each one individually. Unlike the
+existing `paste` command — which copies/cuts the entire yank register to the
+current directory — `paste_resolved` lets the caller specify an explicit
+destination for every single item, choose whether to overwrite an existing
+target, and choose whether to *replace* (delete-then-copy) or *merge* into an
+existing destination. Registered in the executor (`yazi-fm/src/executor.rs`),
+the Spark enum (`yazi-parser/src/spark/spark.rs`), and both module index files.
+
+**4. Per-item scheduler methods — `file_copy_one` / `file_cut_one`**
+
+`yazi-core/src/tasks/file.rs` gains `file_copy_one()` and `file_cut_one()`
+that accept a single source URL, destination URL, force flag, and replace flag.
+These are thin wrappers over the scheduler that feed one file at a time rather
+than iterating over the whole yank register.
+
+**5. Replace mode in the file scheduler**
+
+`FileInCopy` and `FileInCut` (`yazi-scheduler/src/file/in.rs`) gain a `replace`
+field. When set, the destination is deleted in its entirety *before* the
+copy/cut begins (`yazi-scheduler/src/file/file.rs`), providing true
+"replace directory" semantics — files that exist only at the destination are
+removed, unlike the existing `force=true` merge behaviour which preserves them.
+The field is propagated through `traverse.rs` and surfaced via
+`Scheduler::file_copy_replace()` (`yazi-scheduler/src/scheduler.rs`) and
+`FileInCut::with_replace()`.
+
+**6. Pick dialog layout**
+
+The default `open_offset` for the pick dialog (`yazi-config/preset/yazi-default.toml`)
+was increased to accommodate a longer list of choices without truncation.
+
+### Tests
+
+```sh
+cargo test --lib -p yazi-parser paste_resolved   # 5 parser tests
+cargo test --lib -p yazi-config pick_cfg          # PickCfg::with_title test
+```
+
+### Example plugin
+
+These changes are general-purpose and can be used by any plugin. An example
+is the [paste-dialog](https://github.com/chodak166/yazi-paste-dialog) plugin,
+which uses `ya.pick()` and `paste_resolved` together to show an interactive
+conflict-resolution dialog when pasting.
+
+---
+
 <div align="center">
 	<sup>Special thanks to:</sup><br>
 

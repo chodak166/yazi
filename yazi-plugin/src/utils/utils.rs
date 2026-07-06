@@ -32,6 +32,7 @@ pub fn compose(
 			b"which" => Utils::which(lua)?,
 			b"input" => Utils::input(lua)?,
 			b"confirm" => Utils::confirm(lua)?,
+			b"pick" => Utils::pick(lua)?,
 			b"notify" => Utils::notify(lua)?,
 
 			// Log

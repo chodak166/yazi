@@ -17,6 +17,13 @@ pub struct PickCfg {
 	pub position: Position,
 }
 
+impl PickCfg {
+	pub fn with_title(mut self, title: String) -> Self {
+		self.title = title;
+		self
+	}
+}
+
 impl_data_any!(PickCfg);
 
 // --- ConfirmCfg
@@ -117,5 +124,19 @@ impl ConfirmCfg {
 			lines[i].push_span(f.url.to_strand().into_string_lossy());
 		}
 		Some(lines.into())
+	}
+}
+
+#[cfg(test)]
+mod tests {
+	use super::PickCfg;
+
+	#[test]
+	fn test_pick_cfg_with_title() {
+		let cfg =
+			PickCfg { title: "Original".into(), items: vec!["a".into()], position: Default::default() }
+				.with_title("Custom Title".into());
+		assert_eq!(cfg.title, "Custom Title");
+		assert_eq!(cfg.items, vec!["a"]);
 	}
 }

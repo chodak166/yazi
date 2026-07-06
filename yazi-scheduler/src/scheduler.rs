@@ -78,8 +78,17 @@ impl Scheduler {
 	}
 
 	pub fn file_copy(&self, from: UrlBuf, to: UrlBuf, force: bool, follow: bool) {
+		self.file_copy_impl(from, to, force, false, follow);
+	}
+
+	pub fn file_copy_replace(&self, from: UrlBuf, to: UrlBuf, force: bool, follow: bool) {
+		self.file_copy_impl(from, to, force, true, follow);
+	}
+
+	fn file_copy_impl(&self, from: UrlBuf, to: UrlBuf, force: bool, replace: bool, follow: bool) {
 		let follow = follow || !from.scheme().covariant(to.scheme());
-		let mut r#in = FileInCopy { id: Id::ZERO, from, to, force, cha: None, follow, retry: 0 };
+		let mut r#in =
+			FileInCopy { id: Id::ZERO, from, to, force, replace, cha: None, follow, retry: 0 };
 
 		self.add(&mut r#in, |_| ());
 		if r#in.to.try_starts_with(&r#in.from).unwrap_or(false) && !r#in.to.covariant(&r#in.from) {
