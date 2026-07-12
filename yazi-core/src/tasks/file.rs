@@ -6,6 +6,26 @@ use super::Tasks;
 use crate::mgr::Yanked;
 
 impl Tasks {
+	pub fn file_move_one(&self, from: &UrlBuf, to: &UrlBuf, force: bool, replace: bool) {
+		self.scheduler.behavior.reset();
+		if force && from == to {
+			debug!("file_move_one: same file, skip {to:?}");
+		} else {
+			self.scheduler.file_move(FileInMove::new(from.clone(), to.clone(), force).with_replace(replace));
+		}
+	}
+
+	pub fn file_copy_one(&self, from: &UrlBuf, to: &UrlBuf, force: bool, replace: bool, follow: bool) {
+		self.scheduler.behavior.reset();
+		if force && from == to {
+			debug!("file_copy_one: same file, skip {to:?}");
+		} else {
+			self.scheduler.file_copy(FileInCopy::new(from.clone(), to.clone(), force, follow).with_replace(replace));
+		}
+	}
+}
+
+impl Tasks {
 	pub fn file_move(&self, src: &Yanked, dest: &UrlBuf, force: bool) {
 		self.scheduler.behavior.reset();
 

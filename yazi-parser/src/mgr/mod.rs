@@ -19,6 +19,7 @@ yazi_macro::mod_flat!(
 	open
 	open_do
 	paste
+	paste_resolved
 	peek
 	remove
 	remove_do

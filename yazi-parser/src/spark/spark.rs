@@ -65,6 +65,7 @@ pub enum Spark<'a> {
 	Open(crate::mgr::OpenForm),
 	OpenDo(crate::mgr::OpenDoForm),
 	Paste(crate::mgr::PasteForm),
+	PasteResolved(crate::mgr::PasteResolvedForm),
 	Peek(crate::mgr::PeekForm),
 	Quit(crate::app::QuitForm),
 	Refresh(crate::VoidForm),
@@ -268,6 +269,7 @@ impl<'a> IntoLua for Spark<'a> {
 			Self::Open(b) => b.into_lua(lua),
 			Self::OpenDo(b) => b.into_lua(lua),
 			Self::Paste(b) => b.into_lua(lua),
+			Self::PasteResolved(b) => b.into_lua(lua),
 			Self::Peek(b) => b.into_lua(lua),
 			Self::Quit(b) => b.into_lua(lua),
 			Self::Refresh(b) => b.into_lua(lua),
@@ -437,6 +439,7 @@ try_from_spark!(crate::mgr::LinkForm, mgr:link);
 try_from_spark!(crate::mgr::OpenDoForm, mgr:open_do);
 try_from_spark!(crate::mgr::OpenForm, mgr:open);
 try_from_spark!(crate::mgr::PasteForm, mgr:paste);
+try_from_spark!(crate::mgr::PasteResolvedForm, mgr:paste_resolved);
 try_from_spark!(crate::mgr::PeekForm, mgr:peek);
 try_from_spark!(crate::mgr::RemoveForm, mgr:remove);
 try_from_spark!(crate::mgr::RemoveDoForm, mgr:remove_do);
